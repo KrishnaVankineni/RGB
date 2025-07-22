@@ -211,7 +211,7 @@ class OpenAIAPIModel():
             "Content-Type": "application/json"
         }
 
-        payload = {
+        query = {
             "model": self.model,
             "temperature": temperature,
             "top_p": top_p,
@@ -222,7 +222,7 @@ class OpenAIAPIModel():
         }
 
         for attempt in range(max_retries):
-            response = requests.post(self.url, headers=headers, json=payload)
+            response = requests.post(self.url, headers=headers, json=query)
 
             if response.status_code == 200:
                 try:
@@ -242,6 +242,12 @@ class OpenAIAPIModel():
                 raise Exception(f"API Error: {response.text}")
 
         raise Exception("Max retries exceeded due to repeated 429 errors.")
+    
+        responses = requests.post(self.url, headers=headers, json=query)
+        if 'choices' not in responses.json():
+            print(text)
+            print(responses)
+        return responses.json()['choices'][0]['message']['content'] 
 
 '''class OpenAIAPIModel():
     def __init__(self, api_key, url="https://api.openai.com/v1/chat/completions", model="gpt-3.5-turbo"):
