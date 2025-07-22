@@ -194,6 +194,7 @@ class LLama2:
         response = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
         return response
 
+import time
 import requests
 
 class OpenAIAPIModel():
