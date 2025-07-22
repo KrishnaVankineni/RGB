@@ -205,7 +205,7 @@ class OpenAIAPIModel():
 
     def generate(self, text: str, temperature=0.7,
                  system="You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.",
-                 top_p=1, max_retries=5):
+                 top_p=1, max_retries=10):
         headers = {
             "Authorization": f"Bearer {self.API_KEY}",
             "Content-Type": "application/json"
