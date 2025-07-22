@@ -197,13 +197,62 @@ class LLama2:
 import requests
 
 class OpenAIAPIModel():
-    def __init__(self, api_key, url="https://api.openai.com/v1/completions", model="gpt-3.5-turbo"):
+    def __init__(self, api_key, url="https://api.openai.com/v1/chat/completions", model="gpt-3.5-turbo"):
         self.url = url
         self.model = model
         self.API_KEY = api_key
 
-    def generate(self, text: str, temperature=0.7, system="You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.", top_p=1):
-        headers={"Authorization": f"Bearer {self.API_KEY}"}
+    def generate(self, text: str, temperature=0.7,
+                 system="You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.",
+                 top_p=1, max_retries=5):
+        headers = {
+            "Authorization": f"Bearer {self.API_KEY}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": self.model,
+            "temperature": temperature,
+            "top_p": top_p,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": text}
+            ]
+        }
+
+        for attempt in range(max_retries):
+            response = requests.post(self.url, headers=headers, json=payload)
+
+            if response.status_code == 200:
+                try:
+                    return response.json()['choices'][0]['message']['content']
+                except (KeyError, IndexError) as e:
+                    print("Malformed response:", response.json())
+                    raise e
+
+            elif response.status_code == 429:
+                wait_time = 2 ** attempt
+                print(f"[429] Rate limit hit. Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+                continue
+
+            else:
+                print(f"[Error] HTTP {response.status_code}: {response.text}")
+                raise Exception(f"API Error: {response.text}")
+
+        raise Exception("Max retries exceeded due to repeated 429 errors.")
+
+'''class OpenAIAPIModel():
+    def __init__(self, api_key, url="https://api.openai.com/v1/chat/completions", model="gpt-3.5-turbo"):
+        self.url = url
+        self.model = model
+        self.API_KEY = api_key
+
+    def generate(self, text: str, temperature=0.7, system="You are a helpful assistant. You can help me by answering my questions. You can also ask me questions.", 
+                 top_p=1,:
+        headers={
+                "Authorization": f"Bearer {self.API_KEY}",
+                 "Content-Type": "application/json"}
 
         query = {
             "model": self.model,
@@ -225,4 +274,4 @@ class OpenAIAPIModel():
         if 'choices' not in responses.json():
             print(text)
             print(responses)
-        return responses.json()['choices'][0]['message']['content']
+        return responses.json()['choices'][0]['message']['content']'''
