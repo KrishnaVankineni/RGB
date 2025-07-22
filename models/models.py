@@ -167,7 +167,8 @@ class LLama2:
         self.model = AutoModelForCausalLM.from_pretrained(
             plm,
             torch_dtype=torch.float16,
-            device_map='auto'
+            device_map='auto',
+            trust_remote_code=True
         )
     
     def get_prompt(self, message: str, chat_history: list[tuple[str, str]],
